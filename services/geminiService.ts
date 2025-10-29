@@ -8,17 +8,23 @@ import type { InfographicData, NewsAnalysisData, VideoScriptData, BrandProfileDa
 let aiInstance: GoogleGenAI | null = null;
 const getAiClient = (): GoogleGenAI => {
     if (!aiInstance) {
-        // FIX: The API key must be obtained exclusively from `process.env.API_KEY`
-        // as per the coding guidelines. This resolves the TypeScript error
-        // `Property 'env' does not exist on type 'ImportMeta'`.
-        const apikey = import.meta.env.VITE_API_KEY;
+        // === PHẦN SỬA LỖI BẮT ĐẦU TỪ ĐÂY ===
 
+        // SỬA 1: Đổi tên biến 'API_KEY' (viết hoa) thành 'apiKey' (viết thường)
+        // để nó khớp với code bên dưới.
+        const apiKey = import.meta.env.VITE_API_KEY;
+
+        // SỬA 2: Bây giờ 'apiKey' (viết thường) đã được định nghĩa
+        // nên câu lệnh 'if' này sẽ chạy đúng.
         if (!apiKey) {
             // Ném ra lỗi nếu API key không được thiết lập
             throw new Error("Biến môi trường API_KEY chưa được thiết lập. Vui lòng cấu hình trước khi chạy ứng dụng.");
         }
 
+        // SỬA 3: Và hàm khởi tạo này cũng sẽ chạy đúng.
         aiInstance = new GoogleGenAI({ apiKey });
+
+        // === KẾT THÚC PHẦN SỬA LỖI ===
     }
     return aiInstance;
 }
@@ -238,3 +244,5 @@ export async function generateIllustrativeImage(prompt: string, style: ImageStyl
     console.error("Gemini image generation response was invalid:", response);
     throw new Error("Không thể tạo hình ảnh minh họa từ AI. Vui lòng thử lại.");
 }
+
+// Dòng cuối cùng của file, đảm bảo không có lỗi cú pháp
