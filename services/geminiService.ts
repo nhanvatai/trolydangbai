@@ -2,7 +2,16 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { readFileAsB64 } from "../utils/fileProcessor";
 import type { InfographicData, NewsAnalysisData, VideoScriptData, BrandProfileData, ImageStyleId } from "../types";
 
-const API_KEY = import.meta.env.VITE_API_KEY;
+// Use a function to lazily initialize the AI client.
+// This prevents the entire module from failing to load if the API key is missing,
+// and instead makes API calls fail gracefully where they can be caught.
+let aiInstance: GoogleGenAI | null = null;
+const getAiClient = (): GoogleGenAI => {
+    if (!aiInstance) {
+        aiInstance = new GoogleGenAI({ API_KEY: import.meta.env.API_KEY });
+    }
+    return aiInstance;
+}
 
 const buildBrandPreamble = (brandProfile: BrandProfileData): string => {
     if (!brandProfile.brandVoice && !brandProfile.targetAudience && !brandProfile.customInstructions) {
@@ -24,6 +33,7 @@ const buildBrandPreamble = (brandProfile: BrandProfileData): string => {
 }
 
 const callGeminiWithSchema = async (prompt: string, schema: object) => {
+  const ai = getAiClient();
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
@@ -166,6 +176,7 @@ export async function analyzeNewsArticle(articleText: string, brandProfile: Bran
 
 export async function extractTextFromImage(file: File): Promise<string> {
   const { data, mimeType } = await readFileAsB64(file);
+  const ai = getAiClient();
 
   const imagePart = {
     inlineData: {
@@ -195,6 +206,7 @@ export async function generateIllustrativeImage(prompt: string, style: ImageStyl
     };
 
     const fullPrompt = `${prompt}, ${stylePromptMap[style] || stylePromptMap.default}. No text in the image.`;
+    const ai = getAiClient();
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
